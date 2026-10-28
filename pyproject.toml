@@ -1,0 +1,25 @@
+[project]
+name = "bambu-print-tools"
+version = "0.1.0"
+description = "No-MCP, no-daemon CLI toolkit for Bambu Lab printer automation + OpenSCAD/STL checks"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.10"
+dependencies = [
+    "paho-mqtt>=2.0",
+    "requests",
+    "trimesh",
+]
+
+[project.optional-dependencies]
+dev = ["pytest"]
+
+[project.scripts]
+bambu-print-tools = "bambu_print_tools.cli:main"
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["bambu_print_tools*"]

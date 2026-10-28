@@ -1,0 +1,8 @@
+{
+	"name": "Child Process",
+	"type": "process",
+	"from": "system",
+	"setting_id": "P002",
+	"inherits": "Base Process",
+	"brim_type": "outer_only"
+}

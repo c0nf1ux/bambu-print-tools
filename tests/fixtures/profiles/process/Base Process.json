@@ -1,0 +1,8 @@
+{
+	"name": "Base Process",
+	"type": "process",
+	"from": "system",
+	"setting_id": "P001",
+	"layer_height": "0.2",
+	"curr_bed_type": "Cool Plate"
+}

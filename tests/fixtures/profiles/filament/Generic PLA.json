@@ -1,0 +1,8 @@
+{
+	"name": "Generic PLA",
+	"type": "filament",
+	"from": "system",
+	"filament_id": "F001",
+	"nozzle_temperature": "220",
+	"fan_speed": "100"
+}
