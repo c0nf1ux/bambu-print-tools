@@ -4,10 +4,10 @@ redistributing it. Ported from versus-chess's scripts/check-license.sh
 instead of as a one-off bash script duplicated per project.
 
 Confirmed working (by direct testing, not assumed) for MakerWorld and
-MyMiniFactory — both server-render real license data into the initial
+MyMiniFactory - both server-render real license data into the initial
 HTML, fetchable with a plain browser-UA request, no auth needed. Also
 Thingiverse, via their official API (needs a free App Token, see below).
-Does NOT work for Printables/Cults3D — genuine Cloudflare JS challenge,
+Does NOT work for Printables/Cults3D - genuine Cloudflare JS challenge,
 no known workaround short of a real logged-in browser session.
 
 Real finding from using this (versus-chess, 2026-09-07): many "free"
@@ -43,7 +43,7 @@ class LicenseResult:
 
 
 def _platform_of(url: str) -> str | None:
-    """Exact-host or proper-subdomain match only — a naive `host in url`
+    """Exact-host or proper-subdomain match only - a naive `host in url`
     substring check would also match an attacker-shaped URL like
     "https://notmakerworld.com.example.net/..." and then actually fetch
     that host while treating it as MakerWorld."""
@@ -67,7 +67,7 @@ def check_license(url: str, thingiverse_token: str | None = None) -> LicenseResu
         return LicenseResult(
             "unknown", "unsupported",
             note="Printables and Cults3D block automated access entirely (Cloudflare JS "
-                 "challenge) — check manually in a browser. Other platforms untested.",
+                 "challenge) - check manually in a browser. Other platforms untested.",
         )
 
     resp = requests.get(url, headers={"User-Agent": USER_AGENT}, timeout=15)
@@ -108,7 +108,7 @@ def _check_myminifactory(html: str) -> LicenseResult:
     variant = m.group(1)
     note = None
     if "nd" in variant:
-        note = "NOT usable at all — No-Derivatives forbids resizing, even for personal use"
+        note = "NOT usable at all - No-Derivatives forbids resizing, even for personal use"
     elif "nc" in variant or "by" in variant:
         note = "Likely repo-eligible (verify no other restriction on the page)"
     return LicenseResult("myminifactory", "ok", license=f"CC {variant}", note=note)
@@ -124,7 +124,7 @@ def _check_thingiverse(url: str, token: str | None) -> LicenseResult:
             "thingiverse", "unknown",
             note="NEEDS TOKEN: set THINGIVERSE_TOKEN (see module docstring for setup)",
         )
-    # Token goes in the Authorization header, not a query param — a query
+    # Token goes in the Authorization header, not a query param - a query
     # param is more likely to end up in a server access log, a proxy log,
     # or an exception message that includes the request URL.
     resp = requests.get(
@@ -136,7 +136,7 @@ def _check_thingiverse(url: str, token: str | None) -> LicenseResult:
     if not license_str:
         return LicenseResult("thingiverse", "unknown", note=f"no license field returned for thing:{thing_id}")
     note = (
-        "NOT usable at all — No-Derivatives forbids resizing, even for personal use"
+        "NOT usable at all - No-Derivatives forbids resizing, even for personal use"
         if "No Derivatives" in license_str
         else "Likely repo-eligible (verify no other restriction on the page)"
     )

@@ -3,7 +3,7 @@
 Why this exists: the OrcaSlicer CLI does NOT reliably resolve a bundled
 preset's `inherits` chain when passed to --load-settings/--load-filaments.
 It silently falls back to bare program defaults for any key the top-level
-file doesn't state outright — which can slice at the wrong bed temperature
+file doesn't state outright - which can slice at the wrong bed temperature
 with no error (see a1-mini-painting-station's print-profiles/README.md for
 the real failure this caused: 2026-09-10, bottle_row print #1 peeled off
 the plate and spaghetti'd because a flattened fan/temp-only preset silently
@@ -12,19 +12,19 @@ PEI). Ported from that project's print-profiles/flatten.py, generalized
 to take the profile root and overrides as parameters instead of assuming
 one project's layout.
 
-Machine presets are the one exception — do NOT flatten them. The stock
+Machine presets are the one exception - do NOT flatten them. The stock
 nozzle-suffixed machine file (e.g. "Bambu Lab A1 mini 0.4 nozzle.json")
 resolves correctly through the CLI on its own, and a flattened one makes
 the CLI exit with a bare "found error" on some merged key. Pass the stock
 machine file directly; carry any machine-level override (e.g. bed type) in
-the flattened *process* JSON instead — the slicer honours it from there.
+the flattened *process* JSON instead - the slicer honours it from there.
 """
 import glob
 import json
 import os
 import subprocess
 
-# Keys that describe the preset itself, not print settings — dropped from
+# Keys that describe the preset itself, not print settings - dropped from
 # the flattened output so the CLI treats it as a plain settings blob.
 META_KEYS = {
     "inherits", "from", "setting_id", "filament_id", "instantiation",
@@ -63,7 +63,7 @@ def flatten_preset(profile_root: str, kind: str, name: str, overrides: dict | No
     as a user preset so --load-settings accepts it) and project overrides."""
     if kind == "machine":
         raise ValueError(
-            "machine presets are not flattened — the stock nozzle-suffixed "
+            "machine presets are not flattened - the stock nozzle-suffixed "
             "file resolves correctly on its own; pass it directly"
         )
     flat = resolve(profile_root, kind, name)
@@ -96,7 +96,7 @@ def slice_stl(
 ) -> subprocess.CompletedProcess:
     """Run the actual CLI slice. Caller is responsible for having already
     written the flattened process/filament JSON (see write_flat_preset) and
-    for any Windows-path conversion (e.g. cygpath -w) needed on this OS —
+    for any Windows-path conversion (e.g. cygpath -w) needed on this OS -
     kept out of this function so it stays testable without a real OrcaSlicer
     install."""
     return subprocess.run(

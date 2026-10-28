@@ -4,7 +4,7 @@ a1-mini-painting-station's scripts/check_module.py plus the trimesh
 snippets documented in that project's memory, generalized away from the
 A1 mini's specific 180mm bed.
 
-Render a PNG alongside the STL and actually look at it — none of these
+Render a PNG alongside the STL and actually look at it - none of these
 checks replace that (caught real bugs twice in painting-station that these
 numeric checks alone would have missed: overlapping wells, a step that
 *looked* fine from the outside but had zero real depth):
@@ -30,16 +30,16 @@ def is_watertight(mesh: trimesh.Trimesh) -> bool:
 
 def is_truly_fused(mesh: trimesh.Trimesh) -> bool:
     """`mesh.is_watertight` alone does NOT confirm a CSG union() actually
-    fused into one physical piece — two touching-but-disjoint watertight
+    fused into one physical piece - two touching-but-disjoint watertight
     shells both read is_watertight=True. OpenSCAD's own CGAL console
-    output ("Volumes: N") isn't reliable either — a properly-fused single
+    output ("Volumes: N") isn't reliable either - a properly-fused single
     solid can report "Volumes: 2". The real check is connected components."""
     return len(mesh.split(only_watertight=False)) == 1
 
 
 def contains_points(mesh: trimesh.Trimesh, points: list[tuple[float, float, float]]) -> list[bool]:
     """Point-containment check for cavities near a connector edge/slot cut
-    — watertight checks do NOT catch a tunnel (a tunnel through a wall is
+    - watertight checks do NOT catch a tunnel (a tunnel through a wall is
     still a closed, watertight manifold). Work out the real nearest-
     approach geometry between the two features first; don't guess a point
     near where you think the risk is."""

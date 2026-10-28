@@ -47,11 +47,11 @@ class PrintMonitor:
     session before trusting a terminal state.
 
     Why: `gcode_state` on first connect is the printer's LAST STORED state,
-    not necessarily anything live — it can be FAILED left over from a
+    not necessarily anything live - it can be FAILED left over from a
     previous, already-cancelled print. A naive "stop watching as soon as I
     see FAILED/FINISH" check fires immediately on connect and never
     actually watches anything. Exception: if RUNNING itself is the very
-    first state observed, that IS safe to trust immediately — the printer
+    first state observed, that IS safe to trust immediately - the printer
     won't report RUNNING unless something is actively printing right now,
     unlike the terminal states which persist from the last job.
     """
@@ -84,7 +84,7 @@ def build_start_print_payload(
     uploaded to the printer's storage (captured from OrcaSlicer's own debug
     log, 2026-09-10, docs/AUTOMATION.md in a1-mini-painting-station).
 
-    NOT independently verified against a real printer yet — the captured
+    NOT independently verified against a real printer yet - the captured
     log line was truncated ("...") and may omit fields OrcaSlicer also
     sends (e.g. bed_leveling/flow_cali/timelapse flags, a project/task id).
     If the printer silently ignores or rejects this, re-capture the full,
@@ -106,7 +106,7 @@ def build_start_print_payload(
 def connect(config: dict, on_report: Callable[[dict], None]) -> mqtt.Client:
     """Connects and subscribes; `on_report` is called with the raw `print`
     sub-object of every report message. Caller owns the client's lifecycle
-    (call .loop_start()/.loop_forever() and .disconnect() themselves) —
+    (call .loop_start()/.loop_forever() and .disconnect() themselves) -
     this stays a thin wrapper, not a managed background service."""
     serial = config["serial"]
 

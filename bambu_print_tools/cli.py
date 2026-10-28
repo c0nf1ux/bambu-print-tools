@@ -1,5 +1,5 @@
 """Single CLI surface over everything in this package. One process per
-invocation, nothing persistent — see README.md for why that's the point.
+invocation, nothing persistent - see README.md for why that's the point.
 
     python -m bambu_print_tools send <config.json> <file.3mf>
     python -m bambu_print_tools list <config.json>
@@ -74,7 +74,7 @@ def _cmd_start_print(args):
     time.sleep(2)  # give the initial pushall response time to arrive
     client.loop_stop()
     if not started["done"]:
-        sys.exit("Never got a report back from the printer — check it's on and reachable.")
+        sys.exit("Never got a report back from the printer - check it's on and reachable.")
 
 
 def _cmd_check_license(args):
