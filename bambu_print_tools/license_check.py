@@ -24,6 +24,7 @@ from __future__ import annotations
 import os
 import re
 from dataclasses import dataclass
+from urllib.parse import urlsplit
 
 import requests
 
@@ -42,12 +43,20 @@ class LicenseResult:
 
 
 def _platform_of(url: str) -> str | None:
+    """Exact-host or proper-subdomain match only — a naive `host in url`
+    substring check would also match an attacker-shaped URL like
+    "https://notmakerworld.com.example.net/..." and then actually fetch
+    that host while treating it as MakerWorld."""
+    parts = urlsplit(url)
+    if parts.scheme not in ("http", "https"):
+        return None
+    hostname = (parts.hostname or "").lower()
     for host, name in (
         ("makerworld.com", "makerworld"),
         ("myminifactory.com", "myminifactory"),
         ("thingiverse.com", "thingiverse"),
     ):
-        if host in url:
+        if hostname == host or hostname.endswith("." + host):
             return name
     return None
 
@@ -115,7 +124,14 @@ def _check_thingiverse(url: str, token: str | None) -> LicenseResult:
             "thingiverse", "unknown",
             note="NEEDS TOKEN: set THINGIVERSE_TOKEN (see module docstring for setup)",
         )
-    resp = requests.get(f"https://api.thingiverse.com/things/{thing_id}", params={"access_token": token}, timeout=15)
+    # Token goes in the Authorization header, not a query param — a query
+    # param is more likely to end up in a server access log, a proxy log,
+    # or an exception message that includes the request URL.
+    resp = requests.get(
+        f"https://api.thingiverse.com/things/{thing_id}",
+        headers={"Authorization": f"Bearer {token}"},
+        timeout=15,
+    )
     license_str = resp.json().get("license")
     if not license_str:
         return LicenseResult("thingiverse", "unknown", note=f"no license field returned for thing:{thing_id}")
