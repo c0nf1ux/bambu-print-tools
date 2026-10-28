@@ -88,6 +88,34 @@ at normal camera distance. The actual catch was sampling real XYZ
 coordinates against the mesh and checking which ones should be solid
 versus void (`mesh_check.contains_points`).
 
+## Overhangs, bridges, and the bug my own tests caught before a real user would
+
+Overhang detection (flag a downward-facing surface whose angle from
+vertical exceeds what FDM can print without support) and bridge
+detection (flag a near-horizontal span likely to sag) are both simple
+geometric heuristics: compute each coplanar region's angle from the
+build-up axis, flag what's past a threshold. Straightforward to write.
+
+The first version I ran against a real painting-station module flagged
+its own base as a 90-degree overhang on a ~10,000mm2 region. That base is
+the part of the model sitting flat on the print bed. The build plate
+*is* the support there; nothing about this geometry distinguishes "the
+bottom of the model, resting on the bed" from "a ledge floating in open
+air with nothing under it." Every single real model would have hit this,
+because every real model has a base. A check that cries wolf on every
+input isn't a check anyone would keep enabled.
+
+The fix excludes any region whose vertices all sit at the mesh's own
+lowest point (within a small tolerance), on the assumption the model
+will print sitting on a plate at that height. I caught this by actually
+running the new check against a real STL already in a working repo, not
+just against my own synthetic test fixtures, which is also why the test
+suite now includes a case that constructs a shape with something
+*genuinely* floating above the model's base (a shelf well above a thin
+leg) and confirms that real overhang still gets flagged once the bed
+exclusion is in place. A heuristic that only gets tested against shapes
+designed to prove the heuristic right doesn't catch this kind of thing.
+
 ## What's intentionally not here
 
 Automatic repair of a thin wall, camera/timelapse control over MQTT (two

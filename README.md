@@ -39,7 +39,13 @@ different tradeoff than everything in this repo.
   can produce two touching-but-disjoint watertight shells that both
   individually pass a watertight check), and point-containment checks
   (catches a tunnel cut straight through a wall, which a watertight check
-  alone cannot see).
+  alone cannot see). Plus three printability heuristics: overhangs,
+  bridges, and wall thickness (the same ray-cast technique as
+  [print-scale-guard](https://github.com/c0nf1ux/print-scale-guard),
+  shared rather than duplicated). These are static-geometry checks, not a
+  physics simulator, and they exclude whatever's resting on the model's
+  own lowest point by default since the build plate supports that
+  regardless of angle. See `DECISIONS.md`.
 - **`license_check`**: check the real redistribution license on a sourced
   model before printing or reusing it. "Free to download" and "licensed
   for redistribution" are different questions on every one of these
