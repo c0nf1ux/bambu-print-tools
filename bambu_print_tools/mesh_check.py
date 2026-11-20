@@ -23,6 +23,12 @@ here.
 import numpy as np
 import trimesh
 
+from .stl_stream import load_proxy, stl_face_count, stream_stats
+
+# Binary STLs above this many triangles are checked via a streamed proxy
+# instead of being loaded whole (see stl_stream for the measured RAM numbers).
+DEFAULT_MAX_FACES = 100_000
+
 # Build-up axis is always +Z for this toolkit's printers (standard FDM
 # gantry orientation). If that ever stops being true, overhang/bridge
 # checks would need this as a parameter.
@@ -38,14 +44,17 @@ _RAY_BATCH_SIZE = 2000
 _RAY_ORIGIN_EPSILON = 1e-4
 
 
-def check_bed_fit(mesh: trimesh.Trimesh, bed_mm: tuple[float, float, float]) -> list[str]:
-    """Returns a list of failure reasons; empty list means it fits."""
-    extents = mesh.bounding_box.extents
+def _bed_fit_failures(extents, bed_mm: tuple[float, float, float]) -> list[str]:
     failures = []
     for label, dim, limit in zip("XYZ", extents, bed_mm):
         if dim > limit:
             failures.append(f"{label} extent {dim:.1f}mm exceeds {limit:.1f}mm bed edge")
     return failures
+
+
+def check_bed_fit(mesh: trimesh.Trimesh, bed_mm: tuple[float, float, float]) -> list[str]:
+    """Returns a list of failure reasons; empty list means it fits."""
+    return _bed_fit_failures(mesh.bounding_box.extents, bed_mm)
 
 
 def is_watertight(mesh: trimesh.Trimesh) -> bool:
@@ -242,17 +251,58 @@ def check_module(
     max_overhang_deg: float | None = None,
     max_bridge_mm: float | None = None,
     wall_floor_mm: float | None = None,
+    max_faces: int | None = DEFAULT_MAX_FACES,
+    min_height_mm: float | None = None,
 ) -> dict:
     """Geometric-correctness checks always run. The printability checks
     (overhangs, bridges, wall thickness) only run when their threshold is
     given, so existing callers that just want bed-fit/watertight keep
-    getting exactly the same result shape as before."""
-    mesh = trimesh.load(stl_path)
+    getting the same keys as before.
+
+    RAM guard: a binary STL with more than max_faces triangles is NOT
+    loaded whole (trimesh costs ~12x the file size in RAM). Bed-fit and the
+    min_height_mm sanity check use exact bounds streamed from disk, and the
+    printability heuristics run on a reduced proxy mesh (see stl_stream).
+    watertight is None in that case: it needs the real mesh. Pass
+    max_faces=None to always load the full mesh.
+
+    min_height_mm catches wrong-units files (a sculpt authored 1.5 mm tall
+    passes bed-fit trivially)."""
+    proxy = False
+    original_faces = None  # set only on the proxy path
+    try:
+        face_count = stl_face_count(stl_path) if max_faces is not None else None
+    except ValueError:
+        face_count = None  # ASCII STL: fall back to a full load
+
+    if face_count is not None and face_count > max_faces:
+        stats = stream_stats(stl_path)
+        extents = stats["extents"]
+        mesh = load_proxy(stl_path, max_faces=max_faces)
+        proxy = True
+        original_faces = face_count
+        watertight = None
+    else:
+        mesh = trimesh.load(stl_path)
+        extents = list(mesh.bounding_box.extents)
+        watertight = is_watertight(mesh)
+
     result = {
-        "bed_fit_failures": check_bed_fit(mesh, bed_mm),
-        "watertight": is_watertight(mesh),
+        "bed_fit_failures": _bed_fit_failures(extents, bed_mm),
+        "watertight": watertight,
     }
-    if require_watertight and not result["watertight"]:
+    if proxy:  # extra keys only when a proxy was used, so the default shape is unchanged
+        result["original_faces"] = original_faces
+        result["proxy_faces"] = len(mesh.faces)
+        result["proxy_cell_mm"] = mesh.metadata.get("cell_mm")
+    if min_height_mm is not None and max(extents) < min_height_mm:
+        result["bed_fit_failures"].append(
+            f"largest dimension {max(extents):.2f}mm is smaller than {min_height_mm:.1f}mm "
+            "(wrong units? scale it before printing)"
+        )
+    if require_watertight and watertight is None:
+        result["bed_fit_failures"].append("watertight not verified (file reduced to a proxy; run with max_faces=None)")
+    elif require_watertight and not watertight:
         result["bed_fit_failures"].append("not watertight")
     if max_overhang_deg is not None:
         result["overhangs"] = check_overhangs(mesh, max_overhang_deg)

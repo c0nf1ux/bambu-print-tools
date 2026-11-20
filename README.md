@@ -132,6 +132,29 @@ the same date. Treat the per-platform support list in `license_check.py`'s
 docstring as a point-in-time claim, not a guarantee. If a platform that
 used to work starts returning "blocked," that's most likely them, not you.
 
+### Low-RAM mode for sculpted models
+
+Measured 2026-11-20 on an 8 GB machine: everything routine here (an OpenSCAD
+module, slicing, FTP, license lookups) peaks under ~110 MB, with OrcaSlicer
+the biggest at ~320 MB. The only thing that blows the budget is loading a
+sculpted miniature: `trimesh.load` costs about 12x the file size (a 97 MB,
+2.0M-face STL peaked at 1.17 GB).
+
+`check_module` now streams any binary STL over 100k triangles instead of
+loading it whole (`stl_stream.py`):
+
+| Model | Faces | Full load | Now | Volume error |
+|---|---|---|---|---|
+| Flesh Golem | 718k | 479 MB | 170 MB | -0.3% |
+| Jersey Devil | 1.18M | 726 MB | 203 MB | -0.7% |
+| Wendigo (CC0) | 2.0M | 1169 MB | 253 MB | n/a |
+
+Bed fit, volume, area and the new `min_height_mm` wrong-units check use exact
+bounds streamed from disk. Overhang, bridge and wall-thickness checks run on a
+reduced proxy mesh (resolution reported as `proxy_cell_mm`, about 0.3 mm). The
+proxy cannot answer watertight or true-fusion questions, so `watertight` is
+`None` in that mode; pass `max_faces=None` to force a full load.
+
 ## Development
 
 ```bash
