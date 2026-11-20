@@ -105,7 +105,23 @@ debug log while it starts a real print and extend
 
 ### License checking: platform support changes over time
 
-Confirmed by direct testing on **2026-09-07**: MakerWorld and
+Each result reports three answers, not just a license name: **commercial
+use**, **modify/resize**, and **share-alike**. A Non-Commercial (NC) or
+No-Derivatives (ND) license is never reported as usable for a product, and
+a license the tool does not recognise comes back "unknown", never "yes".
+
+| Platform | How it is read | Token needed |
+|---|---|---|
+| Printables | public GraphQL API (the model pages are Cloudflare-blocked, the API is not) | no |
+| Thingiverse | license URL in the page's schema.org JSON-LD; official API if `THINGIVERSE_TOKEN` is set | no |
+| MyMiniFactory | creativecommons.org link in the page HTML | no |
+| MakerWorld | blocked by Cloudflare as of 2026-10-28 | n/a |
+| Cults3D | blocked by Cloudflare | n/a |
+
+Printables and Thingiverse support was added **2026-11-20**, verified
+against live models. Opt-in live tests: `RUN_NETWORK_TESTS=1 pytest`.
+
+History: confirmed by direct testing on **2026-09-07**: MakerWorld and
 MyMiniFactory served real license data to a plain browser-UA request, no
 Cloudflare challenge. Re-tested on **2026-10-28** while building this
 package: **MakerWorld now returns the same Cloudflare "Just a moment" JS

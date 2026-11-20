@@ -80,6 +80,11 @@ def _cmd_start_print(args):
 def _cmd_check_license(args):
     result = license_check.check_license(args.url, thingiverse_token=args.token)
     print(f"{result.platform}: {result.status}" + (f" ({result.license})" if result.license else ""))
+    if result.status == "ok":
+        verdict = {True: "yes", False: "NO", None: "unknown"}
+        print(f"  commercial use: {verdict[result.commercial_ok]}"
+              f" | modify/resize: {verdict[result.derivatives_ok]}"
+              f" | share-alike: {'yes' if result.share_alike else 'no'}")
     if result.note:
         print(f"  {result.note}")
     sys.exit(0 if result.status == "ok" else 1)
