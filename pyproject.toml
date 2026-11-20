@@ -9,6 +9,11 @@ dependencies = [
     "paho-mqtt>=2.0",
     "requests",
     "trimesh",
+    # trimesh needs these for the graph/ray/containment calls mesh_check uses;
+    # they are optional in trimesh itself, so declare them here (CI failed without them).
+    "networkx",
+    "rtree",
+    "scipy",
 ]
 
 [project.optional-dependencies]
